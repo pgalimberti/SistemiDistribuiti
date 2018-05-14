@@ -1,0 +1,50 @@
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Exercise 2</title>
+<script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
+<script type="text/javascript">
+	// Quando il documento è "pronto" (a pagina è stata caricata) esegui la seguente callback
+	$(document).ready(function() {
+		// Esegue una GET di dati JSON-encoded all'endpoint /api/es2/items 
+		$.getJSON("./api/es2/items", function(data) {
+			// Stampa (in caso di successo) il payload della risposta nella console
+			console.log(data);
+			// Cicla sull'array contenuto nel payload della risposta
+			$(data).each(function(index, item) {
+				// Modifica il DOM appendendo all'elemento con id="items"
+				$("#items").append("<li>" + item.name + "</li>");
+			});
+		});
+		// Aggiunge un click handler (una funzione di callback) all'elemento con id="submit"
+		$("#submit").click(function() {
+			// Esegue una POST all'endpoint /api/es2/items passando come
+			// parametro della richiesta la form serializzata
+			$.post("./api/es2/items", $("#form").serialize(), function(data) {
+				// Stampa (in caso di successo) il payload della risposta nella console
+				console.log(data);
+				// Modifica il DOM svuotando l'elemento con id="items"
+				$("#items").empty();
+				// Cicla sull'array contenuto nel payload della risposta
+				$(data).each(function(index, item) {
+					// Modifica il DOM appendendo all'elemento con id="items"
+					$("#items").append("<li>" + item.name + "</li>");
+				});
+			});
+			// Blocco la propagazione dell'evento evitando che venga effettuato
+			// il normale submit della form
+			return false;
+		});
+	});
+</script>
+</head>
+<body>
+	<h1>Items</h1>
+	<ul id="items"></ul>
+	<hr>
+	<form id="form">
+		<input type="text" name="name" placeholder="Insert the item name" />
+		<button id="submit" type="submit">Add an item!</button>
+	</form>
+</body>
+</html>

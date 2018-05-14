@@ -1,0 +1,37 @@
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Exercise 1</title>
+<script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
+<script type="text/javascript">
+	// Quando il documento è "pronto" (a pagina è stata caricata) esegui la seguente callback
+	$(document).ready(function() {
+		// Aggiunge un click handler (una funzione di callback) all'elemento con id="link1"
+		$('#link1').click(function() {
+			// Modifica la struttura del DOM aggiungendo del testo all'elemento con id="container"
+			$('#container').html('Client-side content');
+		});
+		// Aggiunge un click handler (una funzione di callback) all'elemento con id="link2"
+		$('#link2').click(function() {
+			// Esegue una GET all'endpoint /api/es1
+			$.get("./api/es1", function(data) {
+				
+				// Modifica la struttura del DOM aggiungendo del testo all'elemento con id="container"
+				// La variabile data (in caso di successo) contiene la risposta del server
+				$("#container").html(data);
+
+				// Crea e mostra un alert JavaScript per segnalare la fine della callback
+				alert("Load was performed!");
+			});
+		});
+	});
+</script>
+</head>
+<body>
+	<a href="#" id="link1">Click me (client-side)</a>
+	<br>
+	<a href="#" id="link2">Click me (server-side)</a>
+	<hr>
+	<div id="container"></div>
+</body>
+</html>
