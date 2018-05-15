@@ -11,7 +11,7 @@
 		margin-bottom: 5px;
 	}
 	li:hover{
-		color: forestgreen;
+		background-color: #ffffc0;
 	}
 	
 	.setMarginTop{
@@ -25,40 +25,27 @@
 	.width100{
 		width : 100%;
 	}
+	.delete_btn{
+		float: right;
+    	background-color: transparent;
+    	border-color: transparent;
+    	border-radius: 15%;
+    	color: red;
+    	width: 10%;
+    	cursor: pointer;
+    }
+    input:focus,textarea:focus,button:focus{
+    	outline : none;
+    }
+
 </style>
 <script type="text/javascript">
 	$(document).ready(function() {
-		var url = "http://90.147.166.48/api/v1/todos";		
-		//lista da mostrare
-		$.getJSON(url, function(data) {
-			//mostro la lista dei todo
-			$(data._items).each(function(index, item) {
-				$("#todos_list").append("<li id='"+item._id+"' etag='"+item._etag+"'>" + item.title +"</li>");
-			});
-			
-			//on click lista
-			$("li").click(function(){
-				$("#titolo_scelto").val("");
-				$("#descrizione").val("");
-				var id = this.id;
-				var newUrl = url+"/"+id;
-				//var etag = this.getAttribute("etag");			
-				$.ajax({
-					  url: newUrl,
-					 /* headers: {
-					        'If-None-Match': etag,
-					  },*/
-					  dataType: 'json',
-					  success: function(data){
-						 // console.log(data);
-						  $("#titolo_scelto").val(data.title);
-						  $("#descrizione").val(data.text);
-						  $("#id_hidden").val(data._id);
-						  $("#div_detail").show();
-					  }
-				});			
-			});
-		});
+		var url = "http://90.147.166.48/api/v1/todos";
+		$.ajaxSetup({ cache: false });
+		
+		loadList(url);
+		initEditBtn(url);
 		
 		//chiude il div dell'add
 		$("#close").click(function(){
@@ -67,9 +54,6 @@
 		//chiude la descrizione del todo
 		$("#close2").click(function(){
 			$("#div_detail").hide();
-			$("#edit_todo").hide();
-			$('#titolo_scelto').prop('readonly', true);
-			$('#descrizione').prop('readonly', true);
 		});
 		
 		//on click aggiungi todo
@@ -78,109 +62,161 @@
 			$("#submit_add").show();
 		});
 		
-		$("#edit_btn").click(function(){
-			if($("#div_detail").is(":visible")){
-				$("#titolo_scelto").removeAttr('readonly');
-				$("#descrizione").removeAttr('readonly');
-				$("#edit_todo").show();
-			}else{
-				$("#messaggio_edit_choose").show();
-				setTimeout(function(){ 
-					$("#messaggio_edit_choose").hide();
-				}, 1500);
-			}
-		});
-		
 		//aggiungi todo
 		$("#submit_add").click(function(){
-			$.post(url, $("#form").serialize(), function(data) {
+			$.post(url, $("#form_add").serialize(), function(data) {
 				$("#messaggio_add_success").show();
+				loadList(url);
 				setTimeout(function(){ 
 					$("#messaggio_add_success").hide();
 				}, 2000);
 			});
 			return false;
 		});
+	});
+	
+	function loadList(url){
+		$("#todos_list").empty();
+		//lista da mostrare
+		$.getJSON(url, function(data) {
+			//mostro la lista dei todo
+			$(data._items).each(function(index, item) {
+				$("#todos_list").append("<li style='width:100%'>"+
+										"<div class='todo_element' style='float:left;width:70%;' id='"+item._id+"' etag='"+item._etag+"'>"+ item.title +"</div>"+
+										"<button class='delete_btn'>X</button></li>");
+			});
+			initListenerTodo(url);
+			initDeleteBtn(url);
+		});
 		
-		//TODO : edit todo VEDI QUI
-		$("#edit_todo").click(function(){
-			var id = $("#id_hidden").val();
+	}
+	
+	function initListenerTodo(url){
+		$(".todo_element").unbind("click");
+		//on click lista
+		$(".todo_element").click(function(){
+			$("#titolo_scelto").val("");
+			$("#descrizione").val("");
+			var id = this.id;
+			var newUrl = url+"/"+id;
+			var etag = this.getAttribute("etag");			
+			$.ajax({
+				  url: newUrl,
+				  headers: {
+				        'If-Match': etag,
+				  },
+				  dataType: 'json',
+				  success: function(data){
+					 // console.log(data);
+					  $("#titolo_scelto").val(data.title);
+					  $("#descrizione").val(data.text);
+					  $("#id_hidden").val(data._id);
+					  $("#etag_hidden").val(data._etag);
+					  $("#div_detail").show();
+				  }
+			});			
+		});
+	}
+	
+	function initDeleteBtn(url){
+		$(".delete_btn").unbind("click");
+		//eliminazione
+		$(".delete_btn").click(function(){
+			var id = this.parentElement.children[0].id;
+			var etag = this.parentElement.children[0].getAttribute("etag");			
 			var newUrl = url+"/"+id;
 			
 			$.ajax({
 				  url: newUrl,
-				  type: 'PUT',
-				  dataType: 'json',
-				  data : $("#form_edit").serialize(),
+				  headers : {
+					  'If-Match' : etag
+				  },
+				  type: 'DELETE',
 				  success: function(data){
-					 // console.log(data);
-					  $("#messaggio_edit_success").show();
+					  loadList(url);
+					  $("#messaggio_delete_success").show();
 						setTimeout(function(){ 
-							$("#messaggio_edit_success").hide();
+							$("#messaggio_delete_success").hide();
 						}, 2000);
 				  }
 			});	
+		});		
+	}
+	
+	function initEditBtn(url){
+		$("#edit_todo").unbind("click");
+		$("#edit_todo").click(function(){
+			var id = $("#id_hidden").val();
+			var etag = $("#etag_hidden").val();
+			var newUrl = url+"/"+id;
 			
-			/*$.post(newUrl, $("#form_edit").serialize(), function(data) {
-				$("#messaggio_edit_success").show();
-						setTimeout(function(){ 
+			$.ajax({
+				  url: newUrl,
+				  headers : {
+					  'If-Match' : etag
+				  },
+				  type: 'PUT',
+				  data : $("#form_edit").serialize(),
+				  success: function(data){
+					  loadList(url);
+					  $("#div_detail").hide();
+					  $("#messaggio_edit_success").show();
+						setTimeout(function(){
 							$("#messaggio_edit_success").hide();
 						}, 2000);
-			}); */
+				 }
+			});	
 			return false;
 		});
-		
-		//TODO : DA FARE LA DELETE
-		
-	});
+	}
 </script>
 </head>
 <body>
-	<h1>Todos List</h1>
-	
-	<!-- Lista dei todo -->
-	<ul id="todos_list" ></ul>
-
-	<!-- descrizione del li -->
-	<div id="div_detail" style="margin-top:2%;margin-bottom:2%;" hidden>
-		<hr>
-		<button style="float:right;" id="close2">X</button>
-		<form id="form" class="setMarginTop">
-			<h3>Titolo : </h3>
-			<input type="text" class="width100" id="titolo_scelto" name="title" readonly>
-			<h3>Descrizione : </h3>
-			<input type="text" class="width100" id="descrizione" name="text" readonly>
-			<span id="id_hidden" hidden></span>
-			<button id="edit_todo" class="setMarginTop" type="submit" hidden>Edit!</button>
-		</form>
-		<hr>
-	</div>
-
-	<!-- scelta delle possibili azioni -->
-	<div>
-		<h3>Scegli un'azione : </h3>
-		<button id="add_btn">Add</button>
-		<button id="edit_btn">Edit</button>
-		<button id="del_btn">Delete</button>
-	</div>
-	
-	<!-- messaggio per il bottone Edit -->
-	<div id="messaggio_edit_choose" class="setMarginTop" style="color:red;"hidden>Seleziona un ToDo!</div>
-	<div id="messaggio_edit_success" class="setMarginTop" style="color:forestgreen;"hidden>ToDo modificata con successo!</div>
-	
-	<div id="div_azioni" class="setMarginTop width50" hidden>
-		<button style="float:right;" id="close">X</button>
-		<h3> Aggiungi un todo : </h3>
-		
-		<!-- messaggio per il bottone Add -->
-		<div id="messaggio_add_success" class="setMarginTop" style="color:forestgreen;"hidden>ToDo aggiunta con successo!</div>
-		
-		<form id="form" class="setMarginTop">
-			<input type="text" id="title" class="setMarginTop width100" name="title" placeholder="Titolo">
-			<textarea id="text" rows="3" class="setMarginTop width100" name="text" placeholder="Descrizione"></textarea> <br>
+	<div style="width:100%;">
+		<div style="width:60%;float:left;">
+			<h1 style="margin:0">Todos List</h1>			
+			<!-- Lista dei todo -->
+			<ul id="todos_list" ></ul>
+		</div>
+		<div style="width:40%;float:left;">
+				<!-- messaggio per il bottone Edit -->	
+				<div id="messaggio_edit_success" class="setMarginTop" style="color:forestgreen;" hidden>ToDo modificata con successo!</div>
+				<!-- messaggio per la cancellazione -->
+				<div id="messaggio_delete_success" class="setMarginTop" style="color:forestgreen;" hidden>ToDo eliminata con successo!</div>
+			<!-- scelta delle possibili azioni -->
+			<div>
+				<h3>Scegli un'azione : </h3>
+				<button id="add_btn">Add</button>				
+			</div>
+			<!-- descrizione del li -->
+			<div id="div_detail" style="margin-top:2%;margin-bottom:2%;" hidden>
+				<hr>
+				<button style="float:right;" id="close2">X</button>
+				<form id="form_edit" class="setMarginTop">
+					<h3>Titolo : </h3>
+					<input type="text" class="width100" id="titolo_scelto" name="title">
+					<h3>Descrizione : </h3>
+					<input type="text" class="width100" id="descrizione" name="text">
+					<span id="id_hidden" hidden></span>
+					<span id="etag_hidden" hidden></span>
+					<button id="edit_todo" class="setMarginTop" type="submit">Edit</button>
+				</form>
+				<hr>
+			</div>
+			<!-- aggiungi un todo -->
+			<div id="div_azioni" class="setMarginTop width50" hidden>
+				<button style="float:right;" id="close">X</button>
+				<h3> Aggiungi un todo : </h3>				
+				<!-- messaggio per il bottone Add -->
+				<div id="messaggio_add_success" class="setMarginTop" style="color:forestgreen;"hidden>ToDo aggiunta con successo!</div>				
+				<form id="form_add" class="setMarginTop">
+					<input type="text" id="title" class="setMarginTop width100" name="title" placeholder="Titolo">
+					<textarea id="text" rows="3" class="setMarginTop width100" name="text" placeholder="Descrizione"></textarea> <br>					
+					<button id="submit_add" class="setMarginTop" type="submit" hidden>Add!</button>
+				</form>		
+			</div>
 			
-			<button id="submit_add" class="setMarginTop" type="submit" hidden>Add!</button>
-		</form>		
+		</div>
 	</div>
 	
 </body>
