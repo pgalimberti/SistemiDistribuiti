@@ -42,9 +42,13 @@
 <script type="text/javascript">
 	$(document).ready(function() {
 		var url = "http://90.147.166.48/api/v1/todos";
+		var exist_prev = false;
+		var exist_next = false;
+		var page = 1;
+		
 		$.ajaxSetup({ cache: false });
 		
-		loadList(url);
+		loadList(url,page);
 		initEditBtn(url);
 		
 		//chiude il div dell'add
@@ -64,21 +68,22 @@
 		
 		//aggiungi todo
 		$("#submit_add").click(function(){
-			$.post(url, $("#form_add").serialize(), function(data) {
+			$.post(url, $("#form_add").serialize(), function(data) {				
+				loadList(url,1);
 				$("#messaggio_add_success").show();
-				loadList(url);
+				page = 1;
 				setTimeout(function(){ 
 					$("#messaggio_add_success").hide();
-				}, 2000);
+				}, 3000);
 			});
 			return false;
 		});
 	});
 	
-	function loadList(url){
+	function loadList(url,page){
 		$("#todos_list").empty();
 		//lista da mostrare
-		$.getJSON(url, function(data) {
+		$.getJSON(url+"?page="+page, function(data) {
 			//mostro la lista dei todo
 			$(data._items).each(function(index, item) {
 				$("#todos_list").append("<li style='width:100%'>"+
@@ -87,6 +92,20 @@
 			});
 			initListenerTodo(url);
 			initDeleteBtn(url);
+			initPagination(url,page);
+			//pagina 1
+			if(data._links.prev == undefined && data._links.next != undefined){
+				$("#prev_page").hide();
+				$("#next_page").show();
+			}
+			else if(data._links.prev != undefined && data._links.next != undefined){
+				$("#prev_page").show();
+				$("#next_page").show();
+			}
+			else if(data._links.prev != undefined && data._links.next == undefined){
+				$("#prev_page").show();
+				$("#next_page").hide();
+			}
 		});
 		
 	}
@@ -133,14 +152,15 @@
 				  },
 				  type: 'DELETE',
 				  success: function(data){
-					  loadList(url);
+					  loadList(url,1);
+					  page = 1;
 					  $("#messaggio_delete_success").show();
 						setTimeout(function(){ 
 							$("#messaggio_delete_success").hide();
-						}, 2000);
+						}, 3000);
 				  }
 			});	
-		});		
+		});
 	}
 	
 	function initEditBtn(url){
@@ -158,15 +178,36 @@
 				  type: 'PUT',
 				  data : $("#form_edit").serialize(),
 				  success: function(data){
-					  loadList(url);
+					  loadList(url,1);
+					  page = 1;
 					  $("#div_detail").hide();
 					  $("#messaggio_edit_success").show();
 						setTimeout(function(){
 							$("#messaggio_edit_success").hide();
-						}, 2000);
+						}, 3000);
 				 }
 			});	
 			return false;
+		});
+	}
+	
+	function initPagination(url,page){
+		$("#prev_page").unbind("click");
+		$("#next_page").unbind("click");
+		
+		$("#prev_page").click(function(){
+			
+			if(page == 1){
+				return false;
+			}else{
+				page -= 1;
+				loadList(url,page);
+			}
+		});
+		
+		$("#next_page").click(function(){
+			page += 1;
+			loadList(url,page);
 		});
 	}
 </script>
@@ -177,12 +218,16 @@
 			<h1 style="margin:0">Todos List</h1>			
 			<!-- Lista dei todo -->
 			<ul id="todos_list" ></ul>
+			<button id="prev_page" >Prev</button>	
+			<button id="next_page" >Next</button>	
 		</div>
 		<div style="width:40%;float:left;">
-				<!-- messaggio per il bottone Edit -->	
-				<div id="messaggio_edit_success" class="setMarginTop" style="color:forestgreen;" hidden>ToDo modificata con successo!</div>
-				<!-- messaggio per la cancellazione -->
-				<div id="messaggio_delete_success" class="setMarginTop" style="color:forestgreen;" hidden>ToDo eliminata con successo!</div>
+			<!-- messaggio per il bottone Edit -->	
+			<div id="messaggio_edit_success" class="setMarginTop" style="color:forestgreen;font-size: x-large;" hidden>ToDo modificata con successo!</div>
+			<!-- messaggio per la cancellazione -->
+			<div id="messaggio_delete_success" class="setMarginTop" style="color:forestgreen;font-size: x-large;" hidden>ToDo eliminata con successo!</div>
+			<!-- messaggio per l'aggiunta -->
+			<div id="messaggio_add_success" class="setMarginTop" style="color:forestgreen;font-size: x-large;"hidden>ToDo aggiunta con successo!</div>
 			<!-- scelta delle possibili azioni -->
 			<div>
 				<h3>Scegli un'azione : </h3>
@@ -208,7 +253,7 @@
 				<button style="float:right;" id="close">X</button>
 				<h3> Aggiungi un todo : </h3>				
 				<!-- messaggio per il bottone Add -->
-				<div id="messaggio_add_success" class="setMarginTop" style="color:forestgreen;"hidden>ToDo aggiunta con successo!</div>				
+								
 				<form id="form_add" class="setMarginTop">
 					<input type="text" id="title" class="setMarginTop width100" name="title" placeholder="Titolo">
 					<textarea id="text" rows="3" class="setMarginTop width100" name="text" placeholder="Descrizione"></textarea> <br>					
