@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Lab 6</title>
+<script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBug4z348l-Ja3uW-VNHDPB_npG92vzlAY&sensor=false"></script>
+<style>
+	#map {
+	 height: 600px;
+	 width: 100%;
+	}
+</style>
+<script>
+	$(document).ready(function() {
+		var map;
+		var marker = null;
+		var coordinates = [
+			{
+				lat : 45.4853,
+				lng : 9.20923
+			},
+			{
+				lat : 45.4640,
+				lng : 9.1916
+			}];
+		//var infowindow = new google.maps.InfoWindow();
+		getMap(coordinates);
+		testQuery();
+	});
+
+	function getMap(coordinates) {
+		//var testMarker = {lat: 45.4853, lng: 9.20923};		
+		var mapOptions = {
+				center : new google.maps.LatLng(45.4640, 9.1916),
+				zoom : 10,
+				mapTypeId : google.maps.MapTypeId.ROADMAP
+			};
+		
+		 map = new google.maps.Map(document.getElementById('map'), mapOptions);
+		 
+		 setMarker(map,coordinates);
+	}
+	
+	function setMarker(map,coordinates){
+		for ( var i = 0; i < coordinates.length; i++){
+			//console.log(coordinates[i]);
+			marker = new google.maps.Marker({
+		          position: coordinates[i],
+		          map: map
+		        });
+		 }
+	}
+	
+	function testQuery(){
+		
+		var URL = "http://dbpedia.org/sparql?default-graph-uri=http://dbpedia.org&query=";
+		var query = "select ?name where " +
+		"{_:var dct:subject <http://dbpedia.org/resource/Category:Milan_metro_lines>;" +
+		"dbo:routeStart ?name" +
+		"}";
+		var options = "&debug=on&timeout=&format=json&save=display&fname=";
+		var ajaxURL = URL + query + options;
+		$.getJSON(ajaxURL, {}, function(data) {
+			$.each(data.results.bindings, function(i,row){
+				console.log(row.name.value);
+			});
+		});
+		
+	}
+</script>
+</head>
+<body>
+	<div class="wrapper">
+		<div class="content">
+			<div class="main">
+				<div id="map"></div>
+			</div>
+		</div>
+
+	</div>
+</body>
+</html>
