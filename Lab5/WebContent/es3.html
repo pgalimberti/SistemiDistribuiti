@@ -8,7 +8,7 @@
 		cursor: pointer;
 	}
 	li{
-		margin-bottom: 5px;
+		margin-bottom: 3px;
 	}
 	li:hover{
 		background-color: #ffffc0;
@@ -94,7 +94,11 @@
 			initDeleteBtn(url);
 			initPagination(url,page);
 			//pagina 1
-			if(data._links.prev == undefined && data._links.next != undefined){
+			if(data._links.prev == undefined && data._links.next == undefined){
+				$("#prev_page").hide();
+				$("#next_page").hide();
+			}
+			else if(data._links.prev == undefined && data._links.next != undefined){
 				$("#prev_page").hide();
 				$("#next_page").show();
 			}
@@ -195,8 +199,7 @@
 		$("#prev_page").unbind("click");
 		$("#next_page").unbind("click");
 		
-		$("#prev_page").click(function(){
-			
+		$("#prev_page").click(function(){			
 			if(page == 1){
 				return false;
 			}else{
