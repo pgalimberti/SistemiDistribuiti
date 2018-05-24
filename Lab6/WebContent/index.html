@@ -15,18 +15,11 @@
 	$(document).ready(function() {
 		var map;
 		var marker = null;
-		var coordinates = [
-			{
-				lat : 45.4853,
-				lng : 9.20923
-			},
-			{
-				lat : 45.4640,
-				lng : 9.1916
-			}];
+		var coordinates = [];
 		//var infowindow = new google.maps.InfoWindow();
-		getMap(coordinates);
-		testQuery();
+		getCoordinates(coordinates);
+				
+		//testQuery();
 	});
 
 	function getMap(coordinates) {
@@ -47,9 +40,48 @@
 			//console.log(coordinates[i]);
 			marker = new google.maps.Marker({
 		          position: coordinates[i],
-		          map: map
+		          map: map,
+		          icon : '../icon/M1_icon.svg'
 		        });
 		 }
+	}
+	
+	function getCoordinates(coordinates){
+		var endpointUrl = 'https://query.wikidata.org/sparql',
+	    sparqlQuery = "SELECT ?metropolitana_di_Milano ?metropolitana_di_MilanoLabel ?linea_di_collegamento ?linea_di_collegamentoLabel ?coordinate_geografiche \n" +
+	        "WHERE {\n" +
+	        "  SERVICE wikibase:label { bd:serviceParam wikibase:language \"[AUTO_LANGUAGE],it\". }\n" +
+	        "  ?metropolitana_di_Milano wdt:P361 wd:Q735559.\n" +
+	        "  OPTIONAL { ?metropolitana_di_Milano wdt:P81 ?linea_di_collegamento. }\n" +
+	        "  OPTIONAL { ?metropolitana_di_Milano wdt:P625 ?coordinate_geografiche. }\n" +
+	        "}",
+	    settings = {
+	        headers: { Accept: 'application/sparql-results+json' },
+	        async: false,
+	        data: { query: sparqlQuery }
+	    };
+
+		$.ajax( endpointUrl, settings ).then( function ( data ) {
+			/*var temp = {};
+		    console.log( data );
+		    var a = data.results.bindings[0].coordinate_geografiche.value;
+		    a.substring(6,(a.length-1)).split(" ");
+		    temp["lat"] = a[0];
+		    temp["lng"] = a[1];*/
+		    $.each(data.results.bindings, function(i,row){
+		    	var temp = {};
+		    	if(row.coordinate_geografiche != undefined){
+			    	var tempCoords = row.coordinate_geografiche.value;
+			    	var splitted = tempCoords.substring(6,(tempCoords.length-1)).split(" ");
+			    	temp["lat"] = parseFloat(splitted[1]);
+			    	temp["lng"] = parseFloat(splitted[0]);
+			    	coordinates.push(temp);
+		    	}
+		    });
+		    //console.log( data.results.bindings[0].coordinate_geografiche.value );
+		    console.log(coordinates);
+		    getMap(coordinates);
+		} );
 	}
 	
 	function testQuery(){
