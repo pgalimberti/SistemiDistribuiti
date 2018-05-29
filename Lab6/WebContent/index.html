@@ -12,54 +12,16 @@
 	}
 </style>
 <script>
-	$(document).ready(function() {
-		var map;
-		var marker = [];
-		var infoWindow = [];
-		var coordinates = [];
-		
-		getCoordinates(coordinates,marker,infoWindow);
+var map;
+var marker;
+var infoWindow;
+var coordinates = [];
 
-	});
-
-	function getMap(coordinates,marker,infoWindow) {
-		//var testMarker = {lat: 45.4853, lng: 9.20923};		
-		var mapOptions = {
-				center : new google.maps.LatLng(45.4640, 9.1916),
-				zoom : 11.7,
-				mapTypeId : google.maps.MapTypeId.ROADMAP
-			};
-		
-		 map = new google.maps.Map(document.getElementById('map'), mapOptions);
-		 
-		 setMarker(map,coordinates,marker,infoWindow);
-	}
-	
-	function setMarker(map,coordinates,marker,infowindow){
-		for ( var i = 0; i < coordinates.length; i++){
-			//console.log(coordinates[i]);
-			string = "prova"+i;
-			infowindow[i] = new google.maps.InfoWindow(
-				{
-					content : string
-				});
-			marker[i] = new google.maps.Marker({
-		          position: coordinates[i],
-		          map: map,
-		          title: coordinates[i].name,
-		          posizione : i
-		        });
-			google.maps.event.addListener(marker[i], 'click', function(e){
-				infowindow[this.posizione].open(map,this);
-			});
-/* 			marker[i].addListener('click', function() {
-		          infowindow[i].open(map, this);
-		        }); */
-		 }
-	}
+$(document).ready(function() {	
+	getCoordinates(coordinates,marker,infoWindow);
+});
 	
 	function getCoordinates(coordinates,marker,infowindow){
-
 		var endpointUrl = 'https://query.wikidata.org/sparql',
 	    sparqlQuery = "SELECT ?metropolitana_di_Milano ?metropolitana_di_MilanoLabel ?linea_di_collegamento ?linea_di_collegamentoLabel ?coordinate_geografiche \n" +
 	        "WHERE {\n" +
@@ -77,10 +39,10 @@
 		$.ajax( endpointUrl, settings ).then( function ( data ) {
 			var temp = {};
 		    console.log( data );
-		    var a = data.results.bindings[0].coordinate_geografiche.value;
+		    /*var a = data.results.bindings[0].coordinate_geografiche.value;
 		    a.substring(6,(a.length-1)).split(" ");
 		    temp["lat"] = a[0];
-		    temp["lng"] = a[1];
+		    temp["lng"] = a[1];*/
 		    $.each(data.results.bindings, function(i,row){
 		    	var temp = {};
 		    	if(row.coordinate_geografiche != undefined){
@@ -88,50 +50,49 @@
 			    	var splitted = tempCoords.substring(6,(tempCoords.length-1)).split(" ");
 			    	temp["lat"] = parseFloat(splitted[1]);
 			    	temp["lng"] = parseFloat(splitted[0]);
+			    	temp["name"] = row.metropolitana_di_MilanoLabel.value;
+			    	temp["linea"] = row.linea_di_collegamentoLabel.value;
 			    	coordinates.push(temp);
 		    	}
 		    });
-		    //console.log( data.results.bindings[0].coordinate_geografiche.value );
-		    //console.log(coordinates);
 		    getMap(coordinates,marker,infowindow);
 		} );
-	}
-	/*
-	function testQuery(){
-		
-		var URL = "http://dbpedia.org/sparql?default-graph-uri=http://dbpedia.org&query=";
-		var query = "select ?name where " +
-		"{_:var dct:subject <http://dbpedia.org/resource/Category:Milan_metro_lines>;" +
-		"dbo:routeStart ?name" +
-		"}";
-		var options = "&debug=on&timeout=&format=json&save=display&fname=";
-		var ajaxURL = URL + query + options;
-		$.getJSON(ajaxURL, {}, function(data) {
-			$.each(data.results.bindings, function(i,row){
-				console.log(row.name.value);
-			});
-		});
-		
-	}
-	
-	
-	function test(){
-		var endpointUrl = 'https://query.wikidata.org/sparql',
-	    sparqlQuery = "SELECT ?linea_M1 ?logo WHERE {\n" +
-	        "  SERVICE wikibase:label { bd:serviceParam wikibase:language \"[AUTO_LANGUAGE],en\". }\n" +
-	        "  ?linea_M1 wdt:P527 wd:Q2400801.\n" +
-	        "  OPTIONAL { ?linea_M1 wdt:P154 ?logo. }\n" +
-	        "}\n" +
-	        "LIMIT 100",
-	    settings = {
-	        headers: { Accept: 'application/sparql-results+json' },
-	        data: { query: sparqlQuery }
-	    };
+	}	
 
-	$.ajax( endpointUrl, settings ).then( function ( data ) {
-	    console.log( data );
-	} );
-	}*/
+	function getMap(coordinates,marker,infoWindow) {		
+		var mapOptions = {
+				center : new google.maps.LatLng(45.4640, 9.1916),
+				zoom : 12,
+				mapTypeId : google.maps.MapTypeId.ROADMAP
+			};
+		
+		 map = new google.maps.Map(document.getElementById('map'), mapOptions);
+		 
+		 setMarker(map,coordinates,marker,infoWindow);
+	}
+	
+	function setMarker(map,coordinates,marker,infowindow){
+		for ( var i = 0; i < coordinates.length; i++){
+			
+			var html = "<div><span>"+coordinates[i].name+"</span> <span>"+coordinates[i].linea+"</span></div>";
+			
+			var latlng = new google.maps.LatLng(coordinates[i].lat, coordinates[i].lng);
+			
+			var marker = new google.maps.Marker({
+				position: latlng,
+				map: map,
+				html: html
+			});
+			  
+			google.maps.event.addListener(marker, "click", function() {
+		        if (infowindow) infowindow.close();
+		        infowindow = new google.maps.InfoWindow({
+		            content: this.html
+		        });
+		        infowindow.open(map, this);
+		    });
+		}		 
+	}
 </script>
 </head>
 <body>
