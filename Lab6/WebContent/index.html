@@ -14,39 +14,52 @@
 <script>
 	$(document).ready(function() {
 		var map;
-		var marker = null;
+		var marker = [];
+		var infoWindow = [];
 		var coordinates = [];
-		//var infowindow = new google.maps.InfoWindow();
-		getCoordinates(coordinates);
-				
-		//testQuery();
+		
+		getCoordinates(coordinates,marker,infoWindow);
+
 	});
 
-	function getMap(coordinates) {
+	function getMap(coordinates,marker,infoWindow) {
 		//var testMarker = {lat: 45.4853, lng: 9.20923};		
 		var mapOptions = {
 				center : new google.maps.LatLng(45.4640, 9.1916),
-				zoom : 10,
+				zoom : 11.7,
 				mapTypeId : google.maps.MapTypeId.ROADMAP
 			};
 		
 		 map = new google.maps.Map(document.getElementById('map'), mapOptions);
 		 
-		 setMarker(map,coordinates);
+		 setMarker(map,coordinates,marker,infoWindow);
 	}
 	
-	function setMarker(map,coordinates){
+	function setMarker(map,coordinates,marker,infowindow){
 		for ( var i = 0; i < coordinates.length; i++){
 			//console.log(coordinates[i]);
-			marker = new google.maps.Marker({
+			string = "prova"+i;
+			infowindow[i] = new google.maps.InfoWindow(
+				{
+					content : string
+				});
+			marker[i] = new google.maps.Marker({
 		          position: coordinates[i],
 		          map: map,
-		          icon : '../icon/M1_icon.svg'
+		          title: coordinates[i].name,
+		          posizione : i
 		        });
+			google.maps.event.addListener(marker[i], 'click', function(e){
+				infowindow[this.posizione].open(map,this);
+			});
+/* 			marker[i].addListener('click', function() {
+		          infowindow[i].open(map, this);
+		        }); */
 		 }
 	}
 	
-	function getCoordinates(coordinates){
+	function getCoordinates(coordinates,marker,infowindow){
+
 		var endpointUrl = 'https://query.wikidata.org/sparql',
 	    sparqlQuery = "SELECT ?metropolitana_di_Milano ?metropolitana_di_MilanoLabel ?linea_di_collegamento ?linea_di_collegamentoLabel ?coordinate_geografiche \n" +
 	        "WHERE {\n" +
@@ -62,12 +75,12 @@
 	    };
 
 		$.ajax( endpointUrl, settings ).then( function ( data ) {
-			/*var temp = {};
+			var temp = {};
 		    console.log( data );
 		    var a = data.results.bindings[0].coordinate_geografiche.value;
 		    a.substring(6,(a.length-1)).split(" ");
 		    temp["lat"] = a[0];
-		    temp["lng"] = a[1];*/
+		    temp["lng"] = a[1];
 		    $.each(data.results.bindings, function(i,row){
 		    	var temp = {};
 		    	if(row.coordinate_geografiche != undefined){
@@ -79,11 +92,11 @@
 		    	}
 		    });
 		    //console.log( data.results.bindings[0].coordinate_geografiche.value );
-		    console.log(coordinates);
-		    getMap(coordinates);
+		    //console.log(coordinates);
+		    getMap(coordinates,marker,infowindow);
 		} );
 	}
-	
+	/*
 	function testQuery(){
 		
 		var URL = "http://dbpedia.org/sparql?default-graph-uri=http://dbpedia.org&query=";
@@ -100,6 +113,25 @@
 		});
 		
 	}
+	
+	
+	function test(){
+		var endpointUrl = 'https://query.wikidata.org/sparql',
+	    sparqlQuery = "SELECT ?linea_M1 ?logo WHERE {\n" +
+	        "  SERVICE wikibase:label { bd:serviceParam wikibase:language \"[AUTO_LANGUAGE],en\". }\n" +
+	        "  ?linea_M1 wdt:P527 wd:Q2400801.\n" +
+	        "  OPTIONAL { ?linea_M1 wdt:P154 ?logo. }\n" +
+	        "}\n" +
+	        "LIMIT 100",
+	    settings = {
+	        headers: { Accept: 'application/sparql-results+json' },
+	        data: { query: sparqlQuery }
+	    };
+
+	$.ajax( endpointUrl, settings ).then( function ( data ) {
+	    console.log( data );
+	} );
+	}*/
 </script>
 </head>
 <body>
