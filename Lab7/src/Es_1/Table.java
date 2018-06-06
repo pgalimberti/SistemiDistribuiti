@@ -1,23 +1,22 @@
 package Es_1;
 
 public class Table {
-	private int maxFork;
-	private int maxForkOnTable;
-	private int maxPhilsCanEatAtSameTime;
-	private int forkTaken[][];
+	private int maxForkOnTable;//5
+	private int maxPhilsCanEatAtSameTime; //2
+	private int forkTaken[][]; //[0-1][0-4] possono mangiare max 2 filosofi alla volta con 5 forchette sul tavolo da smazzarsi
 	
-	public Table(int maxPhilsCanEatAtSameTime, int maxForkOnTable){
-		this.setMaxFork(4);
+	public Table(int maxPhilsCanEatAtSameTime, int maxForkOnTable){ 
+		//init
 		this.setMaxForkOnTable(maxForkOnTable);
 		this.setMaxPhilsCanEatAtSameTime(maxPhilsCanEatAtSameTime);		
 		this.forkTaken = new int [this.maxPhilsCanEatAtSameTime][this.getMaxForkOnTable()];
 		
 		for(int j=0;j<this.getMaxPhilsCanEatAtSameTime(); j++)
 			for(int i=0;i<this.getMaxForkOnTable(); i++)
-				this.forkTaken[j][i] = 0;
-		//for(int i=0;i<this.getMaxFork(); System.out.println(this.forkTaken[i]), i++);		
+				this.forkTaken[j][i] = 0;	
 	}
 	
+	//getter & setter
 	public int getMaxPhilsCanEatAtSameTime() {
 		return maxPhilsCanEatAtSameTime;
 	}
@@ -36,12 +35,6 @@ public class Table {
 		return this.forkTaken[phil][fork];
 	}
 	
-	public int getMaxFork() {
-		return maxFork;
-	}
-	public void setMaxFork(int maxFork) {
-		this.maxFork = maxFork;
-	}
 	public int[][] getForkTaken() {
 		return forkTaken;
 	}

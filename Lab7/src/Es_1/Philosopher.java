@@ -3,13 +3,11 @@ class Philosopher extends Thread {
     private int identity;
     private boolean stopRequested = false;
     private Fork left, right;
-    private Table table;
     
-    Philosopher(int id, Fork left, Fork right, Table t) {
+    Philosopher(int id, Fork left, Fork right) {
         this.identity = id;
         this.left = left;
         this.right = right;
-        this.table = t;
     }
     public void run() {
         while (!stopRequested) {
@@ -17,7 +15,7 @@ class Philosopher extends Thread {
                 //thinking
                 sleep(50*Math.round(Math.random()));
                 //hungry
-                right.get(this.getIdentity()%2);
+                right.get(this.getIdentity()%2); //massimo due filosofi in contemporanea , quindi modulo 2
                 sleep(50*Math.round(Math.random()));
                 left.get(this.getIdentity()%2);
                 //eating
