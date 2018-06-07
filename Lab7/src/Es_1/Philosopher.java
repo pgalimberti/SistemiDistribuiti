@@ -15,7 +15,7 @@ class Philosopher extends Thread {
                 //thinking
                 sleep(50*Math.round(Math.random()));
                 //hungry
-                right.get(this.getIdentity()); //massimo due filosofi in contemporanea , quindi modulo 2
+                right.get(this.getIdentity());
                 sleep(50*Math.round(Math.random()));
                 left.get(this.getIdentity());
                 //eating

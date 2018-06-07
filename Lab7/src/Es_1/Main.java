@@ -5,7 +5,7 @@ public class Main{
         Fork forks[] = new Fork[5];
         Philosopher phils[] = new Philosopher[5];
         //setto un max di 2 filosofi che possono mangiare in contemporanea con 5 forchette 
-        Table t = new Table(5,5);
+        Table t = new Table();
 
         for(int c=0; c<5; forks[c] = new Fork(c,t), c++);
         for(int c=0; c<5; c++)
