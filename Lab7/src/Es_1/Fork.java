@@ -10,16 +10,17 @@ class Fork {
         this.table = t;
     }
     synchronized void put(int idPhil) {
-    	table.unlockForkAndPhilosopher(idPhil,this.identity, this); //corrisponde al vecchio "taken"
+    	table.unlockForkAndPhilosopher(idPhil,this.identity); //corrisponde al vecchio "taken"
         taken=false;
+       // System.out.println("Fork " + identity + " RILASCIATA by philosopher " + idPhil);
         notify();
     }
     synchronized void get(int idPhil) throws java.lang.InterruptedException {        
-    	while (taken) //corrisponde al vecchio "taken"
-            wait();
-    	table.setWhoCanEat(idPhil, this.identity, this);
-        taken=true;
-        Philosopher p = (Philosopher)(Thread.currentThread());
-        System.out.println("Fork " + identity + " taken by philosopher " + p.getIdentity());
+    	while (taken || table.setWhoCanEat(idPhil, this.identity)) //corrisponde al vecchio "taken"
+            wait();    	
+    	//System.out.println("canEat ("+idPhil+") : " + canEat);
+	    taken=true;
+	    Philosopher p = (Philosopher)(Thread.currentThread());
+	    System.out.println("Fork " + identity + " taken by philosopher " + p.getIdentity());
     }
 }
